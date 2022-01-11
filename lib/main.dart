@@ -1,9 +1,9 @@
-import 'dart:async';
 import 'dart:ui';
 
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:retro/timer.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import 'data.dart';
@@ -36,13 +36,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   PanelController controller = PanelController();
-  bool flag = true;
-  Stream<int>? timerStream;
-  StreamSubscription<int>? timerSubscription;
-  String hoursStr = '00';
-  String minutesStr = '00';
-  String secondsStr = '00';
   late Data data;
+  TextStyle style = TextStyle(color: Colors.black, fontSize: 24);
+  TextEditingController textController = TextEditingController();
 
 
   @override
@@ -69,96 +65,23 @@ class _MyHomePageState extends State<MyHomePage> {
               future: data.getData(),
               builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                 if(!snapshot.hasData) {
-                  return CircularProgressIndicator();
+                  return SizedBox(child: CircularProgressIndicator(),);
                 } else {
                   List<Widget> data = [];
-                  for (var ele in snapshot.data) {
-                    var row = rowDecorator(ele[0], ele[0]);
+                  List<dynamic> fromSP = List.from(snapshot.data);
+                  for(int x = 0; x < fromSP.length; ++x) {
+                    var t = fromSP[x];
+                    var row = rowDecorator(t.keys.first, t.values.first);
                     data.add(row);
                   }
                   return ListView(
+                    shrinkWrap: true,
                     children: data,
                   );
                 }
             },),
           ),
-          panel: Column(children: [
-            Row(
-              children: [
-              Container(
-                width: 50,
-                height: 7,
-                decoration: const BoxDecoration(color: Colors.black38,
-                    borderRadius: BorderRadius.all(Radius.circular(20))),
-              ),
-            ],),
-            Row(
-              children: [
-                Text(
-                  "$hoursStr:$minutesStr:$secondsStr",
-                  style: const TextStyle(
-                    fontSize: 70.0,
-                  ),
-                ),
-                const SizedBox(height: 30.0),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RaisedButton(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                      onPressed: () {
-                        timerStream = stopWatchStream();
-                        timerSubscription = timerStream!.listen((int newTick) {
-                          setState(() {
-                            hoursStr = ((newTick / (60 * 60)) % 60)
-                                .floor()
-                                .toString()
-                                .padLeft(2, '0');
-                            minutesStr = ((newTick / 60) % 60)
-                                .floor()
-                                .toString()
-                                .padLeft(2, '0');
-                            secondsStr =
-                                (newTick % 60).floor().toString().padLeft(2, '0');
-                          });
-                        });
-                      },
-                      color: Colors.green,
-                      child: const Text(
-                        'Start',
-                        style: TextStyle(
-                          fontSize: 20.0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 40.0),
-                    RaisedButton(
-                      padding:
-                      const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-                      onPressed: () {
-                        timerSubscription!.cancel();
-                        timerStream = null;
-                        setState(() {
-                          hoursStr = '00';
-                          minutesStr = '00';
-                          secondsStr = '00';
-                        });
-                      },
-                      color: Colors.red,
-                      child: const Text(
-                        'Reset',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 20.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            )
-          ]),
+          panel: TimerTime(),
           borderRadius: const BorderRadius.all(Radius.circular(20)),
         ),
       ),
@@ -166,43 +89,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget rowDecorator(name, time) {
+    TextEditingController textController2 = TextEditingController();
     return Row(
-      children: [Text(name), Text(time)],
+      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      children: [Container(child:EditableText(controller: textController2, style: style,
+        cursorColor: Colors.black, focusNode: FocusNode(),
+        backgroundCursorColor: Colors.red,), width: 200, height: 50,),
+        Text(time.toString(), style: style,)],
     );
   }
-
-  Stream<int> stopWatchStream() {
-    StreamController<int>? streamController;
-    Timer? timer;
-    Duration? timerInterval = const Duration(seconds: 1);
-    int counter = 0;
-
-    void stopTimer() {
-      if (timer != null) {
-        timer!.cancel();
-        timer = null;
-        counter = 0;
-        streamController!.close();
-      }
-    }
-
-    void tick(_) {
-      counter++;
-      streamController!.add(counter);
-    }
-
-    void startTimer() {
-      timer = Timer.periodic(timerInterval, tick);
-    }
-
-    streamController = StreamController<int>(
-      onListen: startTimer,
-      onCancel: stopTimer,
-      onResume: startTimer,
-      onPause: stopTimer,
-    );
-
-    return streamController.stream;
-  }
-
 }
