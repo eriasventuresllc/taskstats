@@ -58,57 +58,57 @@ class _TimerTimeState extends State<TimerTime> {
     mainAxisAlignment: MainAxisAlignment.center ,
     crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          RaisedButton(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            onPressed: () {
-              timerStream = stopWatchStream();
-              timerSubscription = timerStream!.listen((int newTick) {
-                totalSec = newTick;
-                setState(() {
-                  hoursStr = ((newTick / (60 * 60)) % 60)
-                      .floor()
-                      .toString()
-                      .padLeft(2, '0');
-                  minutesStr = ((newTick / 60) % 60)
-                      .floor()
-                      .toString()
-                      .padLeft(2, '0');
-                  secondsStr =
-                      (newTick % 60).floor().toString().padLeft(2, '0');
-                });
-              });
-            },
-            color: Colors.green,
-            child: const Text(
-              'Start',
-              style: TextStyle(
-                fontSize: 20.0,
-              ),
-            ),
-          ),
-          const SizedBox(width: 40.0),
-          RaisedButton(
-            padding:
-            const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
-            onPressed: () {
-              timerSubscription!.cancel();
-              timerStream = null;
-              setState(() {
-                hoursStr = '00';
-                minutesStr = '00';
-                secondsStr = '00';
-              });
-            },
-            color: Colors.red,
-            child: const Text(
-              'Reset',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20.0,
-              ),
-            ),
-          ),
+          // RaisedButton(
+          //   padding:
+          //   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          //   onPressed: () {
+          //     timerStream = stopWatchStream();
+          //     timerSubscription = timerStream!.listen((int newTick) {
+          //       totalSec = newTick;
+          //       setState(() {
+          //         hoursStr = ((newTick / (60 * 60)) % 60)
+          //             .floor()
+          //             .toString()
+          //             .padLeft(2, '0');
+          //         minutesStr = ((newTick / 60) % 60)
+          //             .floor()
+          //             .toString()
+          //             .padLeft(2, '0');
+          //         secondsStr =
+          //             (newTick % 60).floor().toString().padLeft(2, '0');
+          //       });
+          //     });
+          //   },
+          //   color: Colors.green,
+          //   child: const Text(
+          //     'Start',
+          //     style: TextStyle(
+          //       fontSize: 20.0,
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(width: 40.0),
+          // RaisedButton(
+          //   padding:
+          //   const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+          //   onPressed: () {
+          //     timerSubscription!.cancel();
+          //     timerStream = null;
+          //     setState(() {
+          //       hoursStr = '00';
+          //       minutesStr = '00';
+          //       secondsStr = '00';
+          //     });
+          //   },
+          //   color: Colors.red,
+          //   child: const Text(
+          //     'Reset',
+          //     style: TextStyle(
+          //       color: Colors.white,
+          //       fontSize: 20.0,
+          //     ),
+          //   ),
+          // ),
         ],
       )
     ]);
