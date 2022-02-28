@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "1031691115800",
+    "project_id": "taskstats-5bd3c",
+    "storage_bucket": "taskstats-5bd3c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1031691115800:android:492d854b5504b5cc78126d",
+        "android_client_info": {
+          "package_name": "com.erias.taskstats"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1031691115800-76nh8fp7vafjtiil4shnvbijbdv44ur4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDPWXvH0hn6GGCx3dDel2ya6-xhvrZKM-w"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1031691115800-76nh8fp7vafjtiil4shnvbijbdv44ur4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

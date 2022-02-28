@@ -1,14 +1,44 @@
 import 'dart:async';
-import 'dart:ui';
+import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'data.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (Platform.isIOS) {
+    FirebaseApp app = await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyD_QrbEp5mgwsaGlBm7e9lPMQ8yc6yoov4',
+        //authDomain: 'react-native-firebase-testing.firebaseapp.com',
+        databaseURL: 'https://guessword-92dbb.firebaseio.com',
+        projectId: 'guessword-92dbb',
+        storageBucket: 'guessword-92dbb.appspot.com',
+        messagingSenderId: '706101393726',
+        appId: '1:706101393726:ios:86d170fedbd4dd8facd46f',
+        //measurementId: 'G-0N1G9FLDZE',
+      ),
+    );
+    FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
+  } else {
+    FirebaseApp app = await Firebase.initializeApp(
+      options: const FirebaseOptions(
+        apiKey: 'AIzaSyDPWXvH0hn6GGCx3dDel2ya6-xhvrZKM-w',
+        //authDomain: 'react-native-firebase-testing.firebaseapp.com',
+        databaseURL: 'https://taskstats-5bd3c.firebaseio.com',
+        projectId: 'taskstats-5bd3c',
+        storageBucket: 'taskstats-5bd3c.appspot.com',
+        messagingSenderId: '1031691115800',
+        appId: '1:1031691115800:android:492d854b5504b5cc78126d',
+        //measurementId: 'G-0N1G9FLDZE',
+      ),);
+    FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
+  }
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -66,10 +96,13 @@ class _MyHomePageState extends State<MyHomePage> {
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            "$hoursStr:$minutesStr:$secondsStr",
-            style: const TextStyle(
-              fontSize: 40.0,
+          TextButton(
+            onPressed: null,
+            child: Text(
+              "$hoursStr:$minutesStr:$secondsStr",
+              style: const TextStyle(
+                fontSize: 40.0,
+              ),
             ),
           ),
         ],
@@ -221,6 +254,9 @@ class _MyHomePageState extends State<MyHomePage> {
               print(totalSec);
               timerSubscription!.cancel();
               timerSubscription = null;
+              DateTime now = DateTime.now();
+              String date = now.year.toString()+now.month.toString()+now.day.toString();
+              data.setSaveTask(date, now.millisecondsSinceEpoch, now.microsecondsSinceEpoch, 50);
               registerTimer();
             }
           },

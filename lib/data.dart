@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Data {
@@ -23,6 +24,21 @@ class Data {
     } on RangeError catch (e) {
       return Future.value(['']);
     }
+  }
+
+  void setSaveTask(String date, int started, int stopped, int duration) async {
+    //User? firebaseUser = FirebaseAuth.instance.currentUser;
+    //String uid = firebaseUser!.uid;
+    String uid = '123ABC';
+    CollectionReference users = FirebaseFirestore.instance.collection(uid);
+    // need to check if it already exists
+    users.doc(date.toString()).set({'BD235': {
+      "started": started,
+      "stopped": stopped,
+      'duration': duration}}, SetOptions(merge: true));
+    // read data
+    DocumentSnapshot data = await users.doc(date.toString()).get();
+    print(data.data());
   }
 
   Future<List<dynamic>> getData() async {
