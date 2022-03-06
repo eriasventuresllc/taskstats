@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:retro/sign_in.dart';
 
 import 'data.dart';
 
@@ -14,13 +15,11 @@ void main() async {
     FirebaseApp app = await Firebase.initializeApp(
       options: const FirebaseOptions(
         apiKey: 'AIzaSyD_QrbEp5mgwsaGlBm7e9lPMQ8yc6yoov4',
-        //authDomain: 'react-native-firebase-testing.firebaseapp.com',
         databaseURL: 'https://guessword-92dbb.firebaseio.com',
         projectId: 'guessword-92dbb',
         storageBucket: 'guessword-92dbb.appspot.com',
         messagingSenderId: '706101393726',
         appId: '1:706101393726:ios:86d170fedbd4dd8facd46f',
-        //measurementId: 'G-0N1G9FLDZE',
       ),
     );
     FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
@@ -28,17 +27,18 @@ void main() async {
     FirebaseApp app = await Firebase.initializeApp(
       options: const FirebaseOptions(
         apiKey: 'AIzaSyDPWXvH0hn6GGCx3dDel2ya6-xhvrZKM-w',
-        //authDomain: 'react-native-firebase-testing.firebaseapp.com',
         databaseURL: 'https://taskstats-5bd3c.firebaseio.com',
         projectId: 'taskstats-5bd3c',
         storageBucket: 'taskstats-5bd3c.appspot.com',
         messagingSenderId: '1031691115800',
         appId: '1:1031691115800:android:492d854b5504b5cc78126d',
-        //measurementId: 'G-0N1G9FLDZE',
-      ),);
+      ),
+    );
     FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
   }
   await Firebase.initializeApp();
+  SignIn signIn = SignIn();
+  signIn.signInAnonymously();
   runApp(const MyApp());
 }
 
@@ -66,9 +66,9 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   TextEditingController addController = TextEditingController();
   late Data data;
-  TextStyle style = TextStyle(color: Colors.black, fontSize: 24);
+  TextStyle style = const TextStyle(color: Colors.black, fontSize: 24);
   TextEditingController textController = TextEditingController();
-  List<Widget> tasks = [];
+  Map<String, Widget> tasks = {};
   bool flag = true;
   Stream<int>? timerStream;
   StreamSubscription<int>? timerSubscription;
@@ -76,33 +76,47 @@ class _MyHomePageState extends State<MyHomePage> {
   String minutesStr = '00';
   String secondsStr = '00';
   int totalSec = 0;
-  int recordingIndex = 0;
-  List<Color> colors = [Colors.blue, Colors.red];
+  int startTime = 0;
+  bool hasAlreadyLoaded = false;
+  String recordingName = '';
 
   @override
   void initState() {
+    super.initState();
     data = Data();
+    loadTables();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
     ]);
-    super.initState();
+  }
+
+  void loadTables() async {
+    List<String> tmp = await data.getActivities();
+    for (int x = 0; x < tmp.length; ++x) {
+      tasks.addAll({tmp[x]: taskWidget(tmp[x])});
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     List<Widget> rowTasks = [
-      Row(
+      Column(
         mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           TextButton(
-            onPressed: null,
+            onPressed: () => stopTimer(),
             child: Text(
               "$hoursStr:$minutesStr:$secondsStr",
-              style: const TextStyle(
-                fontSize: 40.0,
-              ),
+              style: const TextStyle(fontSize: 36.0, color: Colors.black),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Text(
+              "Activity: " + recordingName,
+              style: const TextStyle(fontSize: 20.0, color: Colors.black),
             ),
           ),
         ],
@@ -122,11 +136,28 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.all(15),
-          child: ListView(
-            //mainAxisSize: MainAxisSize.min,
-            children: rowTasks,
-          ),
+          padding: const EdgeInsets.all(5),
+          child: FutureBuilder<List<String>>(
+              future: data.getActivities(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                      child: CircularProgressIndicator(
+                    color: Colors.blue,
+                  ));
+                } else if (!hasAlreadyLoaded) {
+                  List<String> tmp = snapshot.data!.toList();
+                  for (int x = 0; x < tmp.length; ++x) {
+                    tasks.addAll({tmp[x]: taskWidget(tmp[x])});
+                  }
+                  rowTasks += buildRows();
+                  hasAlreadyLoaded = true;
+                }
+                return ListView(
+                  //mainAxisSize: MainAxisSize.min,
+                  children: rowTasks,
+                );
+              }),
         ),
       ),
     );
@@ -163,7 +194,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   onPressed: () {
                     Navigator.of(context).pop();
-                    tasks.add(taskWidget(textController.text));
+                    tasks.addAll(
+                        {textController.text: taskWidget(textController.text)});
+                    data.saveTask(textController.text);
                     textController.text = '';
                     setState(() {});
                   },
@@ -172,8 +205,16 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
+  void submitTask() {
+    DateTime now = DateTime.now();
+    String date = data.formatCurrentDate(now);
+    data.setSaveTask(
+        date, recordingName, startTime, now.millisecondsSinceEpoch, totalSec);
+  }
+
   List<Widget> buildRows() {
     List<Widget> rows = [];
+    List<Widget> task = tasks.values.toList();
     for (int x = 0; tasks.length > x; x += 2) {
       Row row;
       // check to make sure we don't so something silly
@@ -181,15 +222,15 @@ class _MyHomePageState extends State<MyHomePage> {
         row = Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            tasks[x],
+            task[x],
           ],
         );
       } else {
         row = Row(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
-            tasks[x],
-            tasks[x + 1],
+            task[x],
+            task[x + 1],
           ],
         );
       }
@@ -208,7 +249,7 @@ class _MyHomePageState extends State<MyHomePage> {
     int counter = 0;
 
     void stopTimer() async {
-      //List<dynamic> tmp = await data.getData();
+      // List<dynamic> tmp = await data.getData();
       if (timer != null) {
         timer!.cancel();
         timer = null;
@@ -237,6 +278,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget taskWidget(name) {
+    // Color color = Colors.blue;
+    // if(recordingName == name) {
+    //   color = Colors.red;
+    // }
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: SizedBox(
@@ -245,20 +290,19 @@ class _MyHomePageState extends State<MyHomePage> {
         child: MaterialButton(
           child: Text(
             name,
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: const TextStyle(color: Colors.white, fontSize: 18),
           ),
           onPressed: () {
             if (timerSubscription == null) {
               registerTimer();
             } else {
-              print(totalSec);
               timerSubscription!.cancel();
               timerSubscription = null;
-              DateTime now = DateTime.now();
-              String date = now.year.toString()+now.month.toString()+now.day.toString();
-              data.setSaveTask(date, now.millisecondsSinceEpoch, now.microsecondsSinceEpoch, 50);
+              submitTask();
               registerTimer();
             }
+            recordingName = name;
+            setState(() {});
           },
           color: Colors.blue,
           shape: const RoundedRectangleBorder(
@@ -271,6 +315,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void registerTimer() {
     timerStream = stopWatchStream();
+    DateTime now = DateTime.now();
+    startTime = now.millisecondsSinceEpoch;
     timerSubscription = timerStream!.listen((int newTick) {
       totalSec = newTick;
       setState(() {
@@ -282,12 +328,26 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void stopTimer() {
+    if (timerSubscription != null) {
+      timerSubscription!.cancel();
+      timerSubscription = null;
+      totalSec = 0;
+      hoursStr = '00';
+      minutesStr = '00';
+      secondsStr = '00';
+      submitTask();
+      recordingName = "";
+      setState(() {});
+    }
+  }
+
   Widget rowDecorator(name, time) {
     TextEditingController textController2 = TextEditingController();
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        Container(
+        SizedBox(
           child: EditableText(
             controller: textController2,
             style: style,
