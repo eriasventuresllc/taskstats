@@ -121,9 +121,6 @@ class _TimerTimeState extends State<TimerTime> {
     int counter = 0;
 
     void stopTimer() async {
-      List<dynamic> tmp = await data.getData();
-      tmp.add({"": totalSec});
-      data.setData(tmp);
       if (timer != null) {
         timer!.cancel();
         timer = null;

@@ -17,12 +17,14 @@ class SignIn {
     return fAuth.currentUser == null;
   }
 
-  void signInAnonymously() async {
+  Future<bool> signInAnonymously() async {
     try {
       await FirebaseAuth.instance.signInAnonymously();
       sleep(const Duration(milliseconds: 200));
+      return Future.value(true);
     } catch (e) {
       print(e);
+      return Future.value(false);
     }
   }
 }

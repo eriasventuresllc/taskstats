@@ -2,11 +2,14 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:retro/sign_in.dart';
 
+import 'analyze.dart';
 import 'data.dart';
 
 void main() async {
@@ -14,12 +17,12 @@ void main() async {
   if (Platform.isIOS) {
     FirebaseApp app = await Firebase.initializeApp(
       options: const FirebaseOptions(
-        apiKey: 'AIzaSyD_QrbEp5mgwsaGlBm7e9lPMQ8yc6yoov4',
-        databaseURL: 'https://guessword-92dbb.firebaseio.com',
-        projectId: 'guessword-92dbb',
-        storageBucket: 'guessword-92dbb.appspot.com',
-        messagingSenderId: '706101393726',
-        appId: '1:706101393726:ios:86d170fedbd4dd8facd46f',
+        apiKey: 'AIzaSyCxQJX--m232XrqN-LJmpIE5bWYynShXDU',
+        databaseURL: 'https://taskstats-5bd3c.firebaseio.com',
+        projectId: 'taskstats-5bd3c',
+        storageBucket: 'taskstats-5bd3c.appspot.com',
+        messagingSenderId: '1031691115800',
+        appId: '1:1031691115800:ios:3c233a3ee49eabab78126d',
       ),
     );
     FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
@@ -37,15 +40,13 @@ void main() async {
     FirebaseFirestore firestore = FirebaseFirestore.instanceFor(app: app);
   }
   await Firebase.initializeApp();
-  SignIn signIn = SignIn();
-  signIn.signInAnonymously();
+  await FirebaseAuth.instance.signInAnonymously();
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
@@ -84,7 +85,6 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     data = Data();
-    loadTables();
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitDown,
       DeviceOrientation.portraitUp,
@@ -124,6 +124,20 @@ class _MyHomePageState extends State<MyHomePage> {
     ];
     rowTasks += buildRows();
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.blue,
+        elevation: 2,
+        title: const Text("Taskstat", style: TextStyle(color: Colors.white, fontSize: 24)),
+        actions:  [
+          IconButton(onPressed: () {
+            if (Platform.isAndroid) {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => Analyze()));
+            } else {
+              Navigator.push(context, CupertinoPageRoute(builder: (context) => Analyze()));
+            }
+          }, icon: const Icon(Icons.analytics))
+        ],
+      ),
       backgroundColor: Colors.white,
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.blue,
@@ -154,7 +168,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   hasAlreadyLoaded = true;
                 }
                 return ListView(
-                  //mainAxisSize: MainAxisSize.min,
                   children: rowTasks,
                 );
               }),

@@ -8,16 +8,8 @@ import 'package:retro/sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Data {
-  SharedPreferences? _prefs;
-  static const DATA_KEY = 'TIME_DATA';
   SignIn signIn = SignIn();
   Random random = Random();
-
-  void setData(List<dynamic> data) async {
-    _prefs = await SharedPreferences.getInstance();
-    String encodedMap = json.encode(data);
-    _prefs!.setString(DATA_KEY, encodedMap);
-  }
 
   Future<List<String>> getSavedTasks(uid) async {
     try {
@@ -25,7 +17,7 @@ class Data {
       QuerySnapshot collectionSnapshot = await collectionRef.get();
       DocumentSnapshot snapshot = collectionSnapshot.docs[0];
       List<dynamic> wordList = snapshot.get('tasks');
-      return new List<String>.from(wordList);
+      return List<String>.from(wordList);
     } on RangeError catch (e) {
       return Future.value(['']);
     }
@@ -78,15 +70,5 @@ class Data {
     // read data
     //DocumentSnapshot data = await users.doc(date.toString()).get();
     //print(data.data());
-  }
-
-  Future<List<dynamic>> getData() async {
-    _prefs = await SharedPreferences.getInstance();
-    String? tmp = _prefs!.getString(DATA_KEY);
-    List<dynamic> data = [];
-    if (tmp != null) {
-      data = json.decode(tmp);
-    }
-    return data;
   }
 }
