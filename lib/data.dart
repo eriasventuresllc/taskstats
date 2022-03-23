@@ -5,6 +5,7 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:retro/sign_in.dart';
+import 'package:retro/task_event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Data {
@@ -23,7 +24,7 @@ class Data {
     }
   }
 
-  String formatCurrentDate(now) {
+  String formatCurrentDate(DateTime now) {
     String date = now.year.toString();
     //now.day.toString();
     if(now.month.toString().length == 1) {
@@ -55,6 +56,27 @@ class Data {
       retval = List.from(tmp);
     }
     return retval;
+  }
+
+  Future<QuerySnapshot<Object?>> getAnalyticsForRange(DateTime start, DateTime end) async {
+    int startRange = int.parse(formatCurrentDate(start));
+    int endRange = int.parse(formatCurrentDate(end));
+    String uid = FirebaseAuth.instance.currentUser!.uid;
+    CollectionReference users = FirebaseFirestore.instance.collection(uid);
+    QuerySnapshot tmp = await users.get();
+    // for (var element in tmp.docs) {
+    //   try {
+    //     int ele = int.parse(element.id);
+    //     if(ele >= startRange && ele <= endRange) {
+    //       Object? data = element.data();
+    //       //print(data);
+    //     }
+    //   } on Exception catch (e) {
+    //     print(e);
+    //     //print('failed');
+    //   }
+    // }
+    return tmp;
   }
 
   void setSaveTask(String date, String task, int started, int stopped, int duration) async {
