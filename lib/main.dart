@@ -221,8 +221,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void submitTask() {
     DateTime now = DateTime.now();
     String date = data.formatCurrentDate(now);
-    data.setSaveTask(
-        date, recordingName, startTime, now.millisecondsSinceEpoch, totalSec);
+    data.setSaveTask(date, recordingName, startTime, now.millisecondsSinceEpoch, totalSec);
   }
 
   List<Widget> buildRows() {

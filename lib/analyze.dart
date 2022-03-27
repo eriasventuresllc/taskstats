@@ -17,8 +17,11 @@ class Analyze extends StatefulWidget {
 }
 
 class AnalyzeState extends State<Analyze> {
+  int max = 0;
+  int min = 999;
   Map<String, int> totalData = {};
   List<BarChartGroupData> analyzeData = [];
+  Map<String, int> storedData = {};
   CalendarFormat _calendarFormat = CalendarFormat.month;
   RangeSelectionMode _rangeSelectionMode = RangeSelectionMode.toggledOn;
   DateTime _focusedDay = DateTime.now();
@@ -33,23 +36,13 @@ class AnalyzeState extends State<Analyze> {
         dateMinusYear.month, dateMinusYear.day);
   }
 
-  void requestData() async {
-    for (int x = 0; x < 10; ++x) {
-      BarChartGroupData ele = BarChartGroupData(
-        x: x,
-        barRods: [
-          BarChartRodData(
-              colors: [const Color.fromRGBO(239, 83, 80, 1), Colors.red],
-              toY: 15.0)
-        ],
-      );
-      analyzeData.add(ele);
-    }
-  }
-
   @override
   void initState() {
     super.initState();
+  }
+
+  void refresh() {
+    setState(() {});
   }
 
   @override
@@ -67,74 +60,51 @@ class AnalyzeState extends State<Analyze> {
               icon: const Icon(Icons.calendar_today))
         ],
       ),
-      body: Stack(children: [
-        Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.max,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 18, top: 15),
-                child: Text(
-                  "Analyze Data",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+      body: Padding(
+        padding: const EdgeInsets.only(left: 34, right: 20, top: 25),
+        child: SizedBox(
+          width: 400,
+          height: 450,
+          child: AspectRatio(
+            aspectRatio: 1.0,
+            child: BarChart(
+              BarChartData(
+                alignment: BarChartAlignment.spaceEvenly,
+                //maxY: max.toDouble() + 5,
+                //minY: min.toDouble(),
+                barTouchData: BarTouchData(
+                  enabled: false,
                 ),
-              ),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 34, right: 20),
-                  child: RotatedBox(
-                    quarterTurns: 1,
-                    child: AspectRatio(
-                      aspectRatio: 1.2,
-                      child: BarChart(
-                        BarChartData(
-                          alignment: BarChartAlignment.spaceEvenly,
-                          maxY: 10,
-                          barTouchData: BarTouchData(
-                            enabled: false,
-                          ),
-                          titlesData: FlTitlesData(
-                            show: true,
-                            bottomTitles: SideTitles(
-                              showTitles: true,
-                              //getTextStyles: (value) =>  TextStyle(color: Color(0xffffffff), fontWeight: FontWeight.bold, fontSize: 13),
-                              margin: 15,
-                              rotateAngle: 270,
-                              getTitles: (double value) {
-                                return "10.0";
-                              },
-                            ),
-                            leftTitles: SideTitles(
-                              showTitles: false,
-                            ),
-                            topTitles: SideTitles(
-                              showTitles: true,
-                              //getTextStyles: GetText,
-                              //getTextStyles: (value) =,
-                              margin: 35,
-                              rotateAngle: 270,
-                              getTitles: (double value) {
-                                return "hello";
-                              },
-                            ),
-                          ),
-                          borderData: FlBorderData(
-                            show: false,
-                          ),
-                          //groupsSpace: 40,
-                          barGroups: analyzeData,
-                        ),
-                        swapAnimationDuration:
-                            const Duration(milliseconds: 600),
-                      ),
-                    ),
+                titlesData: FlTitlesData(
+                  show: true,
+                  bottomTitles: SideTitles(
+                    showTitles: true,
+                    //getTextStyles: (value) =>  TextStyle(color: Color(0xffffffff), fontWeight: FontWeight.bold, fontSize: 13),
+                    margin: 15,
+                    rotateAngle: 310,
+                    getTitles: (double value) {
+                      return storedData.keys.firstWhere((k) => storedData[k] == value.toInt());
+                    },
+                  ),
+                  leftTitles: SideTitles(
+                    showTitles: false,
+                  ),
+                  topTitles: SideTitles(
+                    showTitles: false
                   ),
                 ),
+                borderData: FlBorderData(
+                  show: false,
+                ),
+                //groupsSpace: 40,
+                barGroups: analyzeData,
               ),
-            ]),
-      ]),
+              swapAnimationDuration:
+                  const Duration(milliseconds: 600),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -207,24 +177,45 @@ class AnalyzeState extends State<Analyze> {
                       style: TextStyle(fontSize: 16.0),
                     ),
                     onPressed: () async {
-                      //print('here');
-                      // wip
-                      QuerySnapshot tmp = await data.getAnalyticsForRange(
-                          _rangeStart!, _rangeEnd!);
-                      tmp.docs.forEach((element) {
+                      storedData.clear();
+                      analyzeData.clear();
+                      max = 0;
+                      min = 999;
+                      var rangedData = await data.getAnalyticsForRange(_rangeStart!, _rangeEnd!);
+                      for (var element in rangedData.docs) {
                         var data = element.data();
-                        var tmp = Map<dynamic, dynamic>.from(data as Map<dynamic, dynamic>);
-                        //var tmp = jsonDecode(data.toString());
-                        String task = element.get('task');
-                        int dur = element.get('duration');
-                        if(totalData.containsKey(task)) {
-                          totalData[task] = totalData[task]! + dur;
-                        } else {
-                          totalData[task] = dur;
-                        }
+                          var keyData = Map<String, dynamic>.from(data as Map<String, dynamic>); //for some reason I need this?
+                          int dur = keyData['duration'];
+                          String task = keyData['task'];
+                          if(storedData.containsKey(task)) {
+                            storedData[task] = storedData[task]! + dur;
+                          } else {
+                            storedData[task] = dur;
+                          }
+                      }
+                      var t = storedData.entries.toList()..sort((e1, e2) {
+                        var diff = e2.value.compareTo(e1.value);
+                        if (diff == 0) diff = e2.key.compareTo(e1.key);
+                        return diff;
                       });
-                      print(totalData);
-                      Navigator.pop(context);
+                      storedData = Map<String, int>.fromEntries(t);
+                      storedData.forEach((key, value) {
+                        if (value > max)
+                          max = value;
+                        if (value < min)
+                          min = value;
+                        BarChartGroupData ele = BarChartGroupData(
+                          x: value,
+                          barRods: [
+                            BarChartRodData(
+                                colors: [const Color.fromRGBO(239, 83, 80, 1), Colors.red],
+                                toY: value.toDouble())
+                          ],
+                        );
+                        analyzeData.add(ele);
+                      });
+                      Navigator.of(context).pop(true);
+                      refresh();
                     },
                   ),
                 ]);

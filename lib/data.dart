@@ -4,6 +4,7 @@ import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:retro/sign_in.dart';
 import 'package:retro/task_event.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -26,7 +27,6 @@ class Data {
 
   String formatCurrentDate(DateTime now) {
     String date = now.year.toString();
-    //now.day.toString();
     if(now.month.toString().length == 1) {
       date += ("0" + now.month.toString());
     } else {
@@ -59,38 +59,26 @@ class Data {
   }
 
   Future<QuerySnapshot<Object?>> getAnalyticsForRange(DateTime start, DateTime end) async {
-    int startRange = int.parse(formatCurrentDate(start));
-    int endRange = int.parse(formatCurrentDate(end));
+    int startRange = start.millisecondsSinceEpoch;
+    int endRange = end.millisecondsSinceEpoch + 86400000; // add another day to include the current day
     String uid = FirebaseAuth.instance.currentUser!.uid;
-    CollectionReference users = FirebaseFirestore.instance.collection(uid);
-    QuerySnapshot tmp = await users.get();
-    // for (var element in tmp.docs) {
-    //   try {
-    //     int ele = int.parse(element.id);
-    //     if(ele >= startRange && ele <= endRange) {
-    //       Object? data = element.data();
-    //       //print(data);
-    //     }
-    //   } on Exception catch (e) {
-    //     print(e);
-    //     //print('failed');
-    //   }
-    // }
-    return tmp;
+    CollectionReference<Map<String, dynamic>> users = FirebaseFirestore.instance.
+      collection(uid);
+    QuerySnapshot data = await users.where('started', isGreaterThanOrEqualTo:
+      startRange, isLessThanOrEqualTo: endRange).get();
+    return data;
   }
 
   void setSaveTask(String date, String task, int started, int stopped, int duration) async {
     String uid = FirebaseAuth.instance.currentUser!.uid;
-    //String uid = signIn.getCurrentFirebaseUser().uid;
     CollectionReference users = FirebaseFirestore.instance.collection(uid);
-    int rand = random.nextInt(999999);
-    users.doc(date.toString()).set({rand.toString(): {
+    if(duration == 0) {
+      duration = (stopped - started)~/1000;
+    }
+    users.doc().set({
       "task": task,
       "started": started,
       "stopped": stopped,
-      'duration': duration}}, SetOptions(merge: true));
-    // read data
-    //DocumentSnapshot data = await users.doc(date.toString()).get();
-    //print(data.data());
+      'duration': duration});
   }
 }
