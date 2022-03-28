@@ -59,26 +59,28 @@ class Data {
   }
 
   Future<QuerySnapshot<Object?>> getAnalyticsForRange(DateTime start, DateTime end) async {
-    int startRange = start.millisecondsSinceEpoch;
-    int endRange = end.millisecondsSinceEpoch + 86400000; // add another day to include the current day
+    //int startRange = start.toLocal().millisecondsSinceEpoch;
+    //int endRange = end.toLocal().millisecondsSinceEpoch + 86400000; // add another day to include the current day
+    DateTime endRange = DateTime(end.year, end.month, end.day+1);
     String uid = FirebaseAuth.instance.currentUser!.uid;
     CollectionReference<Map<String, dynamic>> users = FirebaseFirestore.instance.
       collection(uid);
     QuerySnapshot data = await users.where('started', isGreaterThanOrEqualTo:
-      startRange, isLessThanOrEqualTo: endRange).get();
+      start, isLessThanOrEqualTo: endRange).get();
     return data;
   }
 
-  void setSaveTask(String date, String task, int started, int stopped, int duration) async {
+  void setSaveTask(String task, DateTime started, int duration) async {
     String uid = FirebaseAuth.instance.currentUser!.uid;
+    DateTime end = DateTime.now();
     CollectionReference users = FirebaseFirestore.instance.collection(uid);
     if(duration == 0) {
-      duration = (stopped - started)~/1000;
+      duration = (end.millisecondsSinceEpoch - started.millisecondsSinceEpoch)~/1000;
     }
     users.doc().set({
       "task": task,
       "started": started,
-      "stopped": stopped,
+      "stopped": end,
       'duration': duration});
   }
 }

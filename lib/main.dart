@@ -77,7 +77,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String minutesStr = '00';
   String secondsStr = '00';
   int totalSec = 0;
-  int startTime = 0;
+  DateTime? startTime;
   bool hasAlreadyLoaded = false;
   String recordingName = '';
 
@@ -218,12 +218,6 @@ class _MyHomePageState extends State<MyHomePage> {
         });
   }
 
-  void submitTask() {
-    DateTime now = DateTime.now();
-    String date = data.formatCurrentDate(now);
-    data.setSaveTask(date, recordingName, startTime, now.millisecondsSinceEpoch, totalSec);
-  }
-
   List<Widget> buildRows() {
     List<Widget> rows = [];
     List<Widget> task = tasks.values.toList();
@@ -310,7 +304,7 @@ class _MyHomePageState extends State<MyHomePage> {
             } else {
               timerSubscription!.cancel();
               timerSubscription = null;
-              submitTask();
+              data.setSaveTask(recordingName, startTime!, totalSec);
               registerTimer();
             }
             recordingName = name;
@@ -327,8 +321,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void registerTimer() {
     timerStream = stopWatchStream();
-    DateTime now = DateTime.now();
-    startTime = now.millisecondsSinceEpoch;
+    startTime = DateTime.now();
     timerSubscription = timerStream!.listen((int newTick) {
       totalSec = newTick;
       setState(() {
@@ -348,7 +341,7 @@ class _MyHomePageState extends State<MyHomePage> {
       hoursStr = '00';
       minutesStr = '00';
       secondsStr = '00';
-      submitTask();
+      data.setSaveTask(recordingName, startTime!, totalSec);
       recordingName = "";
       setState(() {});
     }

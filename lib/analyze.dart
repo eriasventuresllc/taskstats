@@ -199,6 +199,7 @@ class AnalyzeState extends State<Analyze> {
                         return diff;
                       });
                       storedData = Map<String, int>.fromEntries(t);
+                      print(storedData);
                       storedData.forEach((key, value) {
                         if (value > max)
                           max = value;
